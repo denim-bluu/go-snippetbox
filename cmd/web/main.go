@@ -1,25 +1,36 @@
 package main
 
 import (
-	"log"
+	"flag"
+	"log/slog"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
 )
 
+type application struct {
+	logger *slog.Logger
+}
+
 func main() {
-	addr := ":4000"
+	addr := flag.String("addr", ":4000", "HTTP network address")
+
+	app := application{logger: slog.New(slog.NewTextHandler(os.Stdout, nil))}
 
 	router := mux.NewRouter()
-	router.HandleFunc("/", home).Methods(http.MethodGet)
-	router.HandleFunc("/snippet/view/{id}", snippetView).Methods(http.MethodGet)
-	router.HandleFunc("/snippet/create", snippetCreate).Methods(http.MethodPost)
-	router.HandleFunc("/snippet/delete/{id}", snippetDelete).Methods(http.MethodDelete)
+	s := http.StripPrefix("/static/", http.FileServer(http.Dir("./ui/static")))
+	router.PathPrefix("/static/").Handler(s)
+	router.HandleFunc("/", app.home).Methods(http.MethodGet)
+	router.HandleFunc("/snippet/view/{id}", app.snippetView).Methods(http.MethodGet)
+	router.HandleFunc("/snippet/create", app.snippetCreate).Methods(http.MethodPost)
+	router.HandleFunc("/snippet/delete/{id}", app.snippetDelete).Methods(http.MethodDelete)
 
-	log.Printf("Starting server on localhost%s/", addr)
+	app.logger.Info("Starting server on localhost", "addr", *addr)
 
-	err := http.ListenAndServe(addr, router)
+	err := http.ListenAndServe(*addr, router)
 	if err != nil {
-		log.Fatal(err)
+		app.logger.Error(err.Error())
+		os.Exit(1)
 	}
 }
