@@ -1,13 +1,13 @@
 version: '3.8'
 services:
   postgres:
-    image: postgres:12
+    image: postgres:12-alpine
     environment:
       POSTGRES_DB: myappdb
       POSTGRES_USER: myappuser
       POSTGRES_PASSWORD: myapppassword
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
 

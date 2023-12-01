@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -22,7 +23,7 @@ func main() {
 	if err != nil {
 		app.logger.Error(err.Error())
 	}
-	db.Ping()
+	fmt.Println(db.Ping())
 
 	app.logger.Info("Starting server on localhost", "addr", *addr)
 
@@ -36,7 +37,7 @@ func main() {
 func openDB() (*sql.DB, error) {
 	const (
 		dbDriver = "postgres"
-		dbSource = "postgresql://root:secret@localhost:5432/snippet_app?sslmode=disable"
+		dbSource = "postgresql://myappuser:myapppassword@localhost:5433/myappdb?sslmode=disable"
 	)
 	db, err := sql.Open(dbDriver, dbSource)
 	return db, err
