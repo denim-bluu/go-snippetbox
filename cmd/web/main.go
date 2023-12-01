@@ -1,12 +1,13 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
 	"log/slog"
 	"net/http"
 	"os"
 
-	"github.com/gorilla/mux"
+	_ "github.com/lib/pq"
 )
 
 type application struct {
@@ -17,20 +18,26 @@ func main() {
 	addr := flag.String("addr", ":4000", "HTTP network address")
 
 	app := application{logger: slog.New(slog.NewTextHandler(os.Stdout, nil))}
-
-	router := mux.NewRouter()
-	s := http.StripPrefix("/static/", http.FileServer(http.Dir("./ui/static")))
-	router.PathPrefix("/static/").Handler(s)
-	router.HandleFunc("/", app.home).Methods(http.MethodGet)
-	router.HandleFunc("/snippet/view/{id}", app.snippetView).Methods(http.MethodGet)
-	router.HandleFunc("/snippet/create", app.snippetCreate).Methods(http.MethodPost)
-	router.HandleFunc("/snippet/delete/{id}", app.snippetDelete).Methods(http.MethodDelete)
+	db, err := openDB()
+	if err != nil {
+		app.logger.Error(err.Error())
+	}
+	db.Ping()
 
 	app.logger.Info("Starting server on localhost", "addr", *addr)
 
-	err := http.ListenAndServe(*addr, router)
+	err = http.ListenAndServe(*addr, app.newRouter())
 	if err != nil {
 		app.logger.Error(err.Error())
 		os.Exit(1)
 	}
+}
+
+func openDB() (*sql.DB, error) {
+	const (
+		dbDriver = "postgres"
+		dbSource = "postgresql://root:secret@localhost:5432/snippet_app?sslmode=disable"
+	)
+	db, err := sql.Open(dbDriver, dbSource)
+	return db, err
 }
