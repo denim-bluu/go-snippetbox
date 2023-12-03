@@ -15,7 +15,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		app.serverError(w, r, err)
 	}
-	fmt.Println(snippets)
+
 	files := []string{
 		"./ui/html/base.html",
 		"./ui/html/pages/home.html",
@@ -25,7 +25,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, r, err)
 		return
 	}
-	err = tmpl.ExecuteTemplate(w, "base", nil)
+	err = tmpl.ExecuteTemplate(w, "base", snippets)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
@@ -39,12 +39,25 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		app.notFound(w)
 		return
 	}
-
 	snippet, err := app.snippetModel.Get(id)
 	if err != nil {
 		app.serverError(w, r, err)
 	}
-	w.Write([]byte(fmt.Sprint(snippet)))
+	files := []string{
+		"./ui/html/base.html",
+		"./ui/html/pages/home.html",
+		"./ui/html/pages/view.html",
+	}
+	tmpl, err := template.ParseFiles(files...)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	err = tmpl.ExecuteTemplate(w, "base", snippet)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
 }
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 	title := "O snail"
