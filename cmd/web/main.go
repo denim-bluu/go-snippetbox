@@ -3,27 +3,33 @@ package main
 import (
 	"database/sql"
 	"flag"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
+
+	"snippetbox.joonkang.net/internal/models"
 
 	_ "github.com/lib/pq"
 )
 
 type application struct {
-	logger *slog.Logger
+	logger       *slog.Logger
+	snippetModel *models.SnippetModel
 }
 
 func main() {
 	addr := flag.String("addr", ":4000", "HTTP network address")
 
-	app := application{logger: slog.New(slog.NewTextHandler(os.Stdout, nil))}
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 	db, err := openDB()
 	if err != nil {
-		app.logger.Error(err.Error())
+		logger.Error(err.Error())
+		os.Exit(1)
 	}
-	fmt.Println(db.Ping())
+
+	app := application{logger: logger, snippetModel: &models.SnippetModel{DB: db}}
+
+	defer db.Close()
 
 	app.logger.Info("Starting server on localhost", "addr", *addr)
 
@@ -40,5 +46,11 @@ func openDB() (*sql.DB, error) {
 		dbSource = "postgresql://myappuser:myapppassword@localhost:5433/myappdb?sslmode=disable"
 	)
 	db, err := sql.Open(dbDriver, dbSource)
-	return db, err
+	if err != nil {
+		return nil, err
+	}
+	if err = db.Ping(); err != nil {
+		return nil, err
+	}
+	return db, nil
 }
