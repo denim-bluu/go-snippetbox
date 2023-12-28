@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"html/template"
 	"log/slog"
 	"net/http"
 	"os"
@@ -14,8 +15,9 @@ import (
 )
 
 type application struct {
-	logger       *slog.Logger
-	snippetModel *models.SnippetModel
+	logger        *slog.Logger
+	snippetModel  *models.SnippetModel
+	templateCache map[string]*template.Template
 }
 
 func main() {
@@ -29,7 +31,16 @@ func main() {
 	}
 	defer db.Close()
 
-	app := application{logger: logger, snippetModel: &models.SnippetModel{DB: db}}
+	templateCache, err := newTemplateCache()
+	if err != nil {
+		logger.Error(err.Error())
+	}
+
+	app := application{
+		logger:        logger,
+		snippetModel:  &models.SnippetModel{DB: db},
+		templateCache: templateCache,
+	}
 	app.logger.Info("Starting server on localhost", "addr", *addr)
 
 	err = http.ListenAndServe(*addr, app.newRouter())
