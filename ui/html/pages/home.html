@@ -3,21 +3,24 @@
 
 {{define "main"}}
     <h2>Latest Snippets</h2>
-    {{if .}}
-     <table>
-        <tr>
-            <th>Title</th>
-            <th>Created</th>
-            <th>ID</th>
-        </tr>
-        {{range .}}
-        <tr>
-            <td><a href='/snippet/view?id={{.ID}}'>{{.Title}}</a></td>
-            <td>{{.Created}}</td>
-            <td>#{{.ID}}</td>
-        </tr>
-        {{end}}
-    </table>
+    {{if .Snippets}}
+        <table>
+            <tr>
+                <th>Title</th>
+                <th>Created</th>
+                <th>ID</th>
+            </tr>
+            {{range .Snippets}}
+                {{if eq .ID 99}}
+                    {{break}}
+                {{end}}
+                <tr>
+                    <td><a href='/snippet/view/{{.ID}}'>{{.Title}}</a></td>
+                    <td>{{.Created}}</td>
+                    <td>#{{.ID}}</td>
+                </tr>
+            {{end}}
+        </table>
     {{else}}
         <p>There's nothing to see here... yet!</p>
     {{end}}

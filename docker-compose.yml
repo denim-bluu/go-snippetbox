@@ -1,23 +1,23 @@
-version: '3.8'
+version: "3.8"
 services:
   postgres:
-    image: postgres:12-alpine
+    container_name: ${POSTGRES_CONTAINER_NAME}
+    image: postgres:${POSTGRES_VERSION}
     environment:
-      POSTGRES_DB: myappdb
-      POSTGRES_USER: myappuser
-      POSTGRES_PASSWORD: myapppassword
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5433:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+      - "${POSTGRES_PORT}:5432"
 
   pgadmin:
-    image: dpage/pgadmin4
+    container_name: ${PGADMIN_CONTAINER_NAME}
+    image: dpage/${PGADMIN_VERSION}
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@example.com
-      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
     ports:
-      - "5050:80"
+      - "5050:${PGADMIN_PORT}"
     depends_on:
       - postgres
 

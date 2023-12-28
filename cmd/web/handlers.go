@@ -18,6 +18,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 	files := []string{
 		"./ui/html/base.html",
+		"./ui/html/partials/nav.html",
 		"./ui/html/pages/home.html",
 	}
 	tmpl, err := template.ParseFiles(files...)
@@ -25,7 +26,8 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, r, err)
 		return
 	}
-	err = tmpl.ExecuteTemplate(w, "base", snippets)
+	data := templateData{Snippets: snippets}
+	err = tmpl.ExecuteTemplate(w, "base", data)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
@@ -45,7 +47,7 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 	}
 	files := []string{
 		"./ui/html/base.html",
-		"./ui/html/pages/home.html",
+		"./ui/html/partials/nav.html",
 		"./ui/html/pages/view.html",
 	}
 	tmpl, err := template.ParseFiles(files...)
@@ -53,7 +55,10 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, r, err)
 		return
 	}
-	err = tmpl.ExecuteTemplate(w, "base", snippet)
+
+	data := templateData{Snippet: snippet}
+
+	err = tmpl.ExecuteTemplate(w, "base", data)
 	if err != nil {
 		app.serverError(w, r, err)
 		return

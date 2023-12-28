@@ -9,6 +9,7 @@ import (
 
 	"snippetbox.joonkang.net/internal/models"
 
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
@@ -18,19 +19,17 @@ type application struct {
 }
 
 func main() {
+	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 	addr := flag.String("addr", ":4000", "HTTP network address")
 
-	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 	db, err := openDB()
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
-
-	app := application{logger: logger, snippetModel: &models.SnippetModel{DB: db}}
-
 	defer db.Close()
 
+	app := application{logger: logger, snippetModel: &models.SnippetModel{DB: db}}
 	app.logger.Info("Starting server on localhost", "addr", *addr)
 
 	err = http.ListenAndServe(*addr, app.newRouter())
@@ -41,11 +40,12 @@ func main() {
 }
 
 func openDB() (*sql.DB, error) {
-	const (
-		dbDriver = "postgres"
-		dbSource = "postgresql://myappuser:myapppassword@localhost:5433/myappdb?sslmode=disable"
-	)
-	db, err := sql.Open(dbDriver, dbSource)
+	err := godotenv.Load(".env")
+	if err != nil {
+		return nil, err
+	}
+	dbSource := os.Getenv("DATABASE_URL")
+	db, err := sql.Open("postgres", dbSource)
 	if err != nil {
 		return nil, err
 	}
