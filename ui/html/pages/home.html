@@ -16,7 +16,7 @@
                 {{end}}
                 <tr>
                     <td><a href='/snippet/view/{{.ID}}'>{{.Title}}</a></td>
-                    <td>{{.Created}}</td>
+                    <td>{{.Created | humanDate}}</td>
                     <td>#{{.ID}}</td>
                 </tr>
             {{end}}
