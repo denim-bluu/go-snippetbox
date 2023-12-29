@@ -22,6 +22,11 @@ func (app *application) newRouter() *mux.Router {
 	router.HandleFunc("/snippet/create", app.snippetCreatePost).Methods(http.MethodPost)
 	router.HandleFunc("/snippet/remove", app.snippetRemove).Methods(http.MethodGet)
 	router.HandleFunc("/snippet/remove", app.snippetRemoveDelete).Methods(http.MethodPost)
+	router.HandleFunc("/user/signup", app.userSignup).Methods(http.MethodGet)
+	router.HandleFunc("/user/signup", app.userSignupPost).Methods(http.MethodPost)
+	router.HandleFunc("/user/login", app.userLogin).Methods(http.MethodGet)
+	router.HandleFunc("/user/login", app.userLoginPost).Methods(http.MethodPost)
+	router.HandleFunc("/user/logout", app.userLogoutPost).Methods(http.MethodPost)
 
 	return router
 }

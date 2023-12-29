@@ -18,6 +18,13 @@ type snippetCreateForm struct {
 	validator.Validator `schema:"-"`
 }
 
+type userSignupForm struct {
+	Name                string `schema:"name,required"`
+	Email               string `schema:"email,required"`
+	Password            string `schema:"password,required"`
+	validator.Validator `schema:"-"`
+}
+
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	snippets, err := app.snippetModel.Latest()
 	if err != nil {
@@ -136,4 +143,42 @@ func (app *application) snippetRemoveDelete(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	http.Redirect(w, r, fmt.Sprintf("/"), http.StatusSeeOther)
+}
+
+func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+	data.Form = userSignupForm{}
+	app.render(w, r, http.StatusOK, "signup.html", data)
+}
+func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
+	var form userSignupForm
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	form.Check(validator.NotBlank(form.Name), "name", "This field cannot be blank")
+	form.Check(validator.NotBlank(form.Email), "email", "This field cannot be blank")
+	form.Check(validator.Matches(form.Email, validator.EmailRX), "email", "This field must be a valid email address")
+	form.Check(validator.NotBlank(form.Password), "password", "This field cannot be blank")
+	form.Check(validator.MinChars(form.Password, 8), "password", "This field must be at least 8 characters long")
+
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.render(w, r, http.StatusUnprocessableEntity, "signup.html", data)
+		return
+	}
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+func (app *application) userLogin(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "Nothing here yet")
+}
+func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "Nothing here yet")
+}
+func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "Nothing here yet")
 }
