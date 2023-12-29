@@ -14,5 +14,10 @@ migratedown:
 	migrate -path db/migrations -database "${DATABASE_URL}" -verbose down
 test:
 	go test -v -cover ./...
+docker_compose_up:
+	docker-compose up -d
 
-.PHONY: postgres createdb dropdb migrateup migratedown sqlc test run_psql
+docker_compose_down:
+	docker-compose down
+
+.PHONY: postgres createdb dropdb migrateup migratedown sqlc test run_psql docker_compose_up docker_compose_down
