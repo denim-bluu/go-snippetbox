@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 )
 
@@ -51,7 +52,11 @@ func (m *SnippetModel) Get(id int) (Snippet, error) {
 		&snip.Expires,
 	)
 	if err != nil {
-		return Snippet{}, err
+		if errors.Is(err, sql.ErrNoRows) {
+			return Snippet{}, ErrNoRecord
+		} else {
+			return Snippet{}, err
+		}
 	}
 	return snip, nil
 }
@@ -60,6 +65,9 @@ func (m *SnippetModel) Latest() ([]Snippet, error) {
 	query := `SELECT * FROM snippets ORDER BY created LIMIT 5`
 	result, err := m.DB.Query(query)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return []Snippet{}, ErrNoRecord
+		}
 		return []Snippet{}, err
 	}
 	var snips []Snippet
