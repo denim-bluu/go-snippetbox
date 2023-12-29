@@ -8,7 +8,15 @@ import (
 
 	"github.com/gorilla/mux"
 	"snippetbox.joonkang.net/internal/models"
+	"snippetbox.joonkang.net/internal/validator"
 )
+
+type snippetCreateForm struct {
+	Title   string
+	Content string
+	Expires int
+	validator.Validator
+}
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	snippets, err := app.snippetModel.Latest()
@@ -44,8 +52,12 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
+	data.Form = snippetCreateForm{
+		Expires: 365,
+	}
 	app.render(w, r, http.StatusOK, "create.html", data)
 }
+
 func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
@@ -53,15 +65,30 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	title := r.PostForm.Get("title")
-	content := r.PostForm.Get("content")
 	expires, err := strconv.Atoi(r.PostForm.Get("expires"))
 	if err != nil {
 		app.notFound(w)
 		return
 	}
+	form := snippetCreateForm{
+		Title:   r.PostForm.Get("title"),
+		Content: r.PostForm.Get("content"),
+		Expires: expires,
+	}
 
-	snippet, err := app.snippetModel.Insert(title, content, expires)
+	form.Check(validator.NotBlank(form.Title), "title", "This field cannot be blank")
+	form.Check(validator.MaxStringLength(form.Title, 100), "title", "This field cannot be more than 100 characters long")
+	form.Check(validator.NotBlank(form.Content), "content", "This field cannot be blank")
+	form.Check(validator.PermitteValues(form.Expires, 1, 7, 365), "expires", "This field must equal 1, 7 or 365")
+
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.render(w, r, http.StatusUnprocessableEntity, "create.html", data)
+		return
+	}
+
+	snippet, err := app.snippetModel.Insert(form.Title, form.Content, form.Expires)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
@@ -79,6 +106,7 @@ func (app *application) snippetRemove(w http.ResponseWriter, r *http.Request) {
 	data.IDs = ids
 	app.render(w, r, http.StatusOK, "remove.html", data)
 }
+
 func (app *application) snippetRemoveDelete(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
