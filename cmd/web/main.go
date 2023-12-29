@@ -10,6 +10,7 @@ import (
 
 	"snippetbox.joonkang.net/internal/models"
 
+	"github.com/gorilla/schema"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
@@ -18,6 +19,7 @@ type application struct {
 	logger        *slog.Logger
 	snippetModel  *models.SnippetModel
 	templateCache map[string]*template.Template
+	formDecoder   *schema.Decoder
 }
 
 func main() {
@@ -40,6 +42,7 @@ func main() {
 		logger:        logger,
 		snippetModel:  &models.SnippetModel{DB: db},
 		templateCache: templateCache,
+		formDecoder:   schema.NewDecoder(),
 	}
 	app.logger.Info("Starting server on localhost", "addr", *addr)
 
