@@ -8,7 +8,7 @@ import (
 
 func (app *application) newRouter() *mux.Router {
 	router := mux.NewRouter()
-	router.Use(secureHeaders)
+	router.Use(app.logRequest, secureHeaders)
 	s := http.StripPrefix("/static/", http.FileServer(http.Dir("./ui/static")))
 	router.PathPrefix("/static/").Handler(s)
 	router.HandleFunc("/", app.home).Methods(http.MethodGet, http.MethodHead)
