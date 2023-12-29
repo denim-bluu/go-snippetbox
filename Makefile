@@ -18,5 +18,7 @@ docker_compose_up:
 	docker-compose up -d
 docker_compose_down:
 	docker-compose down
+generate_cert:
+	mkdir -p ./tls && cd ./tls && go run "$$(go env GOROOT)/src/crypto/tls/generate_cert.go" --rsa-bits=2048 --host=localhost 
 
-.PHONY: postgres createdb dropdb migrateup migratedown sqlc test psql docker_compose_up docker_compose_down
+.PHONY: postgres createdb dropdb migrateup migratedown sqlc test psql docker_compose_up docker_compose_down generate_cert
