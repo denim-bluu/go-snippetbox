@@ -8,9 +8,10 @@ import (
 
 func (app *application) newRouter() *mux.Router {
 	router := mux.NewRouter()
+	router.Use(secureHeaders)
 	s := http.StripPrefix("/static/", http.FileServer(http.Dir("./ui/static")))
 	router.PathPrefix("/static/").Handler(s)
-	router.HandleFunc("/", app.home).Methods(http.MethodGet)
+	router.HandleFunc("/", app.home).Methods(http.MethodGet, http.MethodHead)
 	router.HandleFunc("/snippet/view/{id}", app.snippetView).Methods(http.MethodGet)
 	router.HandleFunc("/snippet/create", app.snippetCreate).Methods(http.MethodPost)
 	router.HandleFunc("/snippet/delete/{id}", app.snippetDelete).Methods(http.MethodDelete)
