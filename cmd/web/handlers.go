@@ -69,12 +69,27 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", snippet.ID), http.StatusSeeOther)
 }
 
-func (app *application) snippetDelete(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)
-	id, err := strconv.Atoi(params["id"])
-	if err != nil || id < 1 {
+func (app *application) snippetRemove(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(r)
+	app.render(w, r, http.StatusOK, "remove.html", data)
+}
+func (app *application) snippetRemoveDelete(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	id, err := strconv.Atoi(r.PostForm.Get("id"))
+	if err != nil {
 		app.notFound(w)
 		return
 	}
-	w.Write([]byte(fmt.Sprintf("Snippet Deleting: %d", id)))
+
+	err = app.snippetModel.Delete(id)
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	http.Redirect(w, r, fmt.Sprintf("/"), http.StatusSeeOther)
 }

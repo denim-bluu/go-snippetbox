@@ -20,6 +20,8 @@ func (app *application) newRouter() *mux.Router {
 	router.HandleFunc("/snippet/view/{id}", app.snippetView).Methods(http.MethodGet)
 	router.HandleFunc("/snippet/create", app.snippetCreate).Methods(http.MethodGet)
 	router.HandleFunc("/snippet/create", app.snippetCreatePost).Methods(http.MethodPost)
-	router.HandleFunc("/snippet/delete/{id}", app.snippetDelete).Methods(http.MethodDelete)
+	router.HandleFunc("/snippet/remove", app.snippetRemove).Methods(http.MethodGet)
+	router.HandleFunc("/snippet/remove", app.snippetRemoveDelete).Methods(http.MethodPost)
+
 	return router
 }

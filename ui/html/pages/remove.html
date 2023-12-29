@@ -1,0 +1,13 @@
+{{define "title"}}Remove a Snippet{{end}}
+
+{{define "main"}}
+<form action='/snippet/remove' method='POST'>
+    <div>
+        <label>Snippet ID:</label>
+        <input type='text' name='id'>
+    </div>
+    <div>
+        <input type='submit' value='Remove snippet'>
+    </div>
+</form>
+{{end}}

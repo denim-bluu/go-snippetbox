@@ -39,6 +39,16 @@ func (m *SnippetModel) Insert(title string, content string, expires int) (Snippe
 	return snip, nil
 }
 
+func (m *SnippetModel) Delete(id int) error {
+	query := `DELETE FROM snippets WHERE id = $1`
+
+	_, err := m.DB.Exec(query, id)
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
 func (m *SnippetModel) Get(id int) (Snippet, error) {
 	query := `SELECT * FROM snippets WHERE id = $1 LIMIT 1`
 	result := m.DB.QueryRow(query, id)
