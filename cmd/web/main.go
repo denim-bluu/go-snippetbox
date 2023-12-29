@@ -57,8 +57,9 @@ func main() {
 		cookieStore:   store,
 	}
 	srv := &http.Server{
-		Addr:    *addr,
-		Handler: app.newRouter(),
+		Addr:     *addr,
+		Handler:  app.newRouter(),
+		ErrorLog: slog.NewLogLogger(logger.Handler(), slog.LevelError),
 	}
 	app.logger.Info("Starting server on localhost", "addr", *addr)
 
