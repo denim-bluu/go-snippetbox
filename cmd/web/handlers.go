@@ -71,6 +71,12 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 
 func (app *application) snippetRemove(w http.ResponseWriter, r *http.Request) {
 	data := app.newTemplateData(r)
+	ids, err := app.snippetModel.GetIDs()
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	data.IDs = ids
 	app.render(w, r, http.StatusOK, "remove.html", data)
 }
 func (app *application) snippetRemoveDelete(w http.ResponseWriter, r *http.Request) {

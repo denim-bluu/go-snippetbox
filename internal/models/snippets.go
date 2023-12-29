@@ -49,6 +49,7 @@ func (m *SnippetModel) Delete(id int) error {
 	}
 	return nil
 }
+
 func (m *SnippetModel) Get(id int) (Snippet, error) {
 	query := `SELECT * FROM snippets WHERE id = $1 LIMIT 1`
 	result := m.DB.QueryRow(query, id)
@@ -69,6 +70,26 @@ func (m *SnippetModel) Get(id int) (Snippet, error) {
 		}
 	}
 	return snip, nil
+}
+
+func (m *SnippetModel) GetIDs() ([]int, error) {
+	query := `SELECT DISTINCT id FROM snippets ORDER BY id ASC`
+	result, err := m.DB.Query(query)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return []int{}, ErrNoRecord
+		}
+		return []int{}, err
+	}
+
+	var ids []int
+	for result.Next() {
+		var id int
+		err = result.Scan(&id)
+		ids = append(ids, id)
+	}
+
+	return ids, nil
 }
 
 func (m *SnippetModel) Latest() ([]Snippet, error) {
