@@ -47,6 +47,18 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 
 	data := app.newTemplateData(r)
 	data.Snippet = snippet
+
+	session, err := app.cookieStore.Get(r, "session")
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	fm := session.Flashes("create-message")
+	if fm != nil {
+		data.Flash = fm[0].(string)
+		session.Save(r, w)
+	}
+
 	app.render(w, r, http.StatusOK, "view.html", data)
 }
 
@@ -89,7 +101,7 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		app.serverError(w, r, err)
 		return
 	}
-	session.AddFlash("Snippet successfully created!")
+	session.AddFlash("Snippet successfully created!", "create-message")
 	session.Save(r, w)
 	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", snippet.ID), http.StatusSeeOther)
 }

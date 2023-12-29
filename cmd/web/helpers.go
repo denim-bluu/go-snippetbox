@@ -11,10 +11,8 @@ import (
 )
 
 func (app *application) newTemplateData(r *http.Request) templateData {
-	session, _ := app.cookieStore.Get(r, "session")
 	return templateData{
 		CurrentYear: time.Now().Year(),
-		Flash:       session.Flashes()[0].(string),
 	}
 }
 
