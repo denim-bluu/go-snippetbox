@@ -56,13 +56,15 @@ func main() {
 		formDecoder:   schema.NewDecoder(),
 		cookieStore:   store,
 	}
+	srv := &http.Server{
+		Addr:    *addr,
+		Handler: app.newRouter(),
+	}
 	app.logger.Info("Starting server on localhost", "addr", *addr)
 
-	err = http.ListenAndServe(*addr, app.newRouter())
-	if err != nil {
-		app.logger.Error(err.Error())
-		os.Exit(1)
-	}
+	err = srv.ListenAndServe()
+	logger.Error(err.Error())
+	os.Exit(1)
 }
 
 func openDB() (*sql.DB, error) {
