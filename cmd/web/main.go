@@ -7,10 +7,12 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
 
 	"snippetbox.joonkang.net/internal/models"
 
 	"github.com/gorilla/schema"
+	"github.com/gorilla/sessions"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
@@ -20,6 +22,15 @@ type application struct {
 	snippetModel  *models.SnippetModel
 	templateCache map[string]*template.Template
 	formDecoder   *schema.Decoder
+	cookieStore   *sessions.CookieStore
+}
+
+var store = sessions.NewCookieStore([]byte("super-secret-key"))
+
+func init() {
+	store.Options.MaxAge = int(12 * time.Hour)
+	store.Options.HttpOnly = true
+	store.Options.Secure = true
 }
 
 func main() {
@@ -43,6 +54,7 @@ func main() {
 		snippetModel:  &models.SnippetModel{DB: db},
 		templateCache: templateCache,
 		formDecoder:   schema.NewDecoder(),
+		cookieStore:   store,
 	}
 	app.logger.Info("Starting server on localhost", "addr", *addr)
 
