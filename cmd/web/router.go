@@ -5,18 +5,19 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
+	"snippetbox.joonkang.net/ui"
 )
 
 func (app *application) newRouter() *mux.Router {
 	router := mux.NewRouter()
-	router.Use(app.recoverPanic, app.logRequest, secureHeaders)
+	router.Use(app.recoverPanic, app.logRequest, secureHeaders, app.authenticate)
 
 	router.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		app.notFound(w)
 	})
 
-	s := http.StripPrefix("/static/", http.FileServer(http.Dir("./ui/static")))
-	router.PathPrefix("/static/").Handler(s)
+	fileServer := http.FileServer(http.FS(ui.Files))
+	router.Handle("/static/*filepath", fileServer).Methods(http.MethodGet)
 	router.HandleFunc("/", app.home).Methods(http.MethodGet, http.MethodHead)
 	router.HandleFunc("/snippet/view/{id}", app.snippetView).Methods(http.MethodGet)
 	router.HandleFunc("/user/signup", app.userSignup).Methods(http.MethodGet)
