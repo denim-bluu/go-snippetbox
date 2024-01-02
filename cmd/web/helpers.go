@@ -10,9 +10,10 @@ import (
 	"github.com/gorilla/schema"
 )
 
-func (app *application) newTemplateData(r *http.Request) templateData {
+func (app *application) newTemplateData(w http.ResponseWriter, r *http.Request) templateData {
 	return templateData{
-		CurrentYear: time.Now().Year(),
+		CurrentYear:     time.Now().Year(),
+		IsAuthenticated: app.isAuthenticated(w, r),
 	}
 }
 
@@ -65,4 +66,15 @@ func (app *application) clientError(w http.ResponseWriter, status int) {
 
 func (app *application) notFound(w http.ResponseWriter) {
 	app.clientError(w, http.StatusNotFound)
+}
+
+func (app *application) isAuthenticated(w http.ResponseWriter, r *http.Request) bool {
+	session, err := app.cookieStore.Get(r, "session")
+	if err != nil {
+		app.serverError(w, r, err)
+		return false
+	}
+	_, ok := session.Values["authenticatedUserID"]
+	return ok
+
 }

@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/sessions"
 	"snippetbox.joonkang.net/internal/models"
 	"snippetbox.joonkang.net/internal/validator"
 )
@@ -24,13 +25,18 @@ type userSignupForm struct {
 	Password            string `schema:"password,required"`
 	validator.Validator `schema:"-"`
 }
+type userLoginForm struct {
+	Email               string `schema:"email,required"`
+	Password            string `schema:"password,required"`
+	validator.Validator `schema:"-"`
+}
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	snippets, err := app.snippetModel.Latest()
 	if err != nil {
 		app.serverError(w, r, err)
 	}
-	data := app.newTemplateData(r)
+	data := app.newTemplateData(w, r)
 	data.Snippets = snippets
 
 	session, err := app.cookieStore.Get(r, "session")
@@ -64,7 +70,7 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := app.newTemplateData(r)
+	data := app.newTemplateData(w, r)
 	data.Snippet = snippet
 
 	session, err := app.cookieStore.Get(r, "session")
@@ -82,7 +88,7 @@ func (app *application) snippetView(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) snippetCreate(w http.ResponseWriter, r *http.Request) {
-	data := app.newTemplateData(r)
+	data := app.newTemplateData(w, r)
 	data.Form = snippetCreateForm{
 		Expires: 365,
 	}
@@ -103,7 +109,7 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	form.Check(validator.PermitteValues(form.Expires, 1, 7, 365), "expires", "This field must equal 1, 7 or 365")
 
 	if !form.Valid() {
-		data := app.newTemplateData(r)
+		data := app.newTemplateData(w, r)
 		data.Form = form
 		app.render(w, r, http.StatusUnprocessableEntity, "create.html", data)
 		return
@@ -125,18 +131,18 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", snippet.ID), http.StatusSeeOther)
 }
 
-func (app *application) snippetRemove(w http.ResponseWriter, r *http.Request) {
-	data := app.newTemplateData(r)
+func (app *application) snippetDelete(w http.ResponseWriter, r *http.Request) {
+	data := app.newTemplateData(w, r)
 	ids, err := app.snippetModel.GetIDs()
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
 	data.IDs = ids
-	app.render(w, r, http.StatusOK, "remove.html", data)
+	app.render(w, r, http.StatusOK, "delete.html", data)
 }
 
-func (app *application) snippetRemoveDelete(w http.ResponseWriter, r *http.Request) {
+func (app *application) snippetDeletePost(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
@@ -158,7 +164,7 @@ func (app *application) snippetRemoveDelete(w http.ResponseWriter, r *http.Reque
 }
 
 func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
-	data := app.newTemplateData(r)
+	data := app.newTemplateData(w, r)
 	data.Form = userSignupForm{}
 	app.render(w, r, http.StatusOK, "signup.html", data)
 }
@@ -178,7 +184,7 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 	form.Check(validator.MinChars(form.Password, 8), "password", "This field must be at least 8 characters long")
 
 	if !form.Valid() {
-		data := app.newTemplateData(r)
+		data := app.newTemplateData(w, r)
 		data.Form = form
 		app.render(w, r, http.StatusUnprocessableEntity, "signup.html", data)
 		return
@@ -188,7 +194,7 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if errors.Is(err, models.ErrDuplicateEmail) {
 			form.AddFieldError("email", "Address is already in use")
-			data := app.newTemplateData(r)
+			data := app.newTemplateData(w, r)
 			data.Form = form
 			app.render(w, r, http.StatusUnprocessableEntity, "signup.html", data)
 			return
@@ -204,11 +210,67 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 func (app *application) userLogin(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Nothing here yet")
+	data := app.newTemplateData(w, r)
+	data.Form = userLoginForm{}
+	app.render(w, r, http.StatusOK, "login.html", data)
 }
 func (app *application) userLoginPost(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Nothing here yet")
+	var form userLoginForm
+	err := app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	form.Check(validator.NotBlank(form.Email), "email", "This field cannot be blank")
+	form.Check(validator.StrPattenMatch(form.Email, validator.EmailRX), "email", "This field must be a valid email address")
+	form.Check(validator.NotBlank(form.Password), "password", "This field cannot be blank")
+
+	if !form.Valid() {
+		data := app.newTemplateData(w, r)
+		data.Form = form
+		app.render(w, r, http.StatusUnprocessableEntity, "login.html", data)
+		return
+	}
+
+	id, err := app.userModel.Authenticate(form.Email, form.Password)
+	if err != nil {
+		if errors.Is(err, models.ErrInvalidCredentials) {
+			form.AddNonFieldError("Email or Password is incorrect")
+			data := app.newTemplateData(w, r)
+			data.Form = form
+			app.render(w, r, http.StatusUnprocessableEntity, "login.html", data)
+			return
+		} else {
+			app.serverError(w, r, err)
+			return
+		}
+	}
+
+	session, err := app.cookieStore.Get(r, "session")
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	session.AddFlash("User login complete!", "create-message")
+	session.Values["authenticatedUserID"] = id
+	if err = sessions.Save(r, w); err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 func (app *application) userLogoutPost(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Nothing here yet")
+	session, err := app.cookieStore.Get(r, "session")
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	delete(session.Values, "authenticatedUserID")
+	session.AddFlash("User logout complete!", "create-message")
+	if err = sessions.Save(r, w); err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

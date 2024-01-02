@@ -1,9 +1,9 @@
-{{define "title"}}Remove a Snippet{{end}}
+{{define "title"}}Delete a Snippet{{end}}
 
 {{define "main"}}
     {{if .IDs}}
-    <h2>Remove a Snippet</h2>
-    <form action='/snippet/remove' method='POST'>
+    <h2>Delete a Snippet</h2>
+    <form action='/snippet/delete' method='POST'>
         <div>
             <label>Snippet ID:</label>
             <select name='id'>
@@ -13,7 +13,7 @@
             </select>
         </div>
         <div>
-            <input type='submit' value='Remove snippet'>
+            <input type='submit' value='Delete snippet'>
         </div>
     {{end}}
 {{end}}
