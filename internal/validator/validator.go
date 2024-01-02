@@ -17,7 +17,7 @@ func (v *Validator) Valid() bool {
 	return len(v.FieldErrors) == 0
 }
 
-func (v *Validator) Add(field, message string) {
+func (v *Validator) AddFieldError(field, message string) {
 	if v.FieldErrors == nil {
 		v.FieldErrors = make(map[string]string)
 	}
@@ -29,7 +29,7 @@ func (v *Validator) Add(field, message string) {
 
 func (v *Validator) Check(ok bool, key, message string) {
 	if !ok {
-		v.Add(key, message)
+		v.AddFieldError(key, message)
 	}
 }
 
@@ -49,6 +49,6 @@ func MinChars(value string, n int) bool {
 	return utf8.RuneCountInString(value) >= n
 }
 
-func Matches(value string, rx *regexp.Regexp) bool {
+func StrPattenMatch(value string, rx *regexp.Regexp) bool {
 	return rx.MatchString(value)
 }

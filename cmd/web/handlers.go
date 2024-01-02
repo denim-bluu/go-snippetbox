@@ -32,6 +32,18 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	}
 	data := app.newTemplateData(r)
 	data.Snippets = snippets
+
+	session, err := app.cookieStore.Get(r, "session")
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+	fm := session.Flashes("create-message")
+	if fm != nil {
+		data.Flash = fm[0].(string)
+		session.Save(r, w)
+	}
+
 	app.render(w, r, http.StatusOK, "home.html", data)
 }
 
@@ -150,6 +162,7 @@ func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
 	data.Form = userSignupForm{}
 	app.render(w, r, http.StatusOK, "signup.html", data)
 }
+
 func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 	var form userSignupForm
 	err := app.decodePostForm(r, &form)
@@ -160,7 +173,7 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 
 	form.Check(validator.NotBlank(form.Name), "name", "This field cannot be blank")
 	form.Check(validator.NotBlank(form.Email), "email", "This field cannot be blank")
-	form.Check(validator.Matches(form.Email, validator.EmailRX), "email", "This field must be a valid email address")
+	form.Check(validator.StrPattenMatch(form.Email, validator.EmailRX), "email", "This field must be a valid email address")
 	form.Check(validator.NotBlank(form.Password), "password", "This field cannot be blank")
 	form.Check(validator.MinChars(form.Password, 8), "password", "This field must be at least 8 characters long")
 
@@ -170,6 +183,23 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 		app.render(w, r, http.StatusUnprocessableEntity, "signup.html", data)
 		return
 	}
+
+	err = app.userModel.Insert(form.Name, form.Email, form.Password)
+	if err != nil {
+		if errors.Is(err, models.ErrDuplicateEmail) {
+			form.AddFieldError("email", "Address is already in use")
+			data := app.newTemplateData(r)
+			data.Form = form
+			app.render(w, r, http.StatusUnprocessableEntity, "signup.html", data)
+			return
+		} else {
+			app.serverError(w, r, err)
+		}
+	}
+
+	session, err := app.cookieStore.Get(r, "session")
+	session.AddFlash("User signup complete!", "create-message")
+	session.Save(r, w)
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
