@@ -1,6 +1,24 @@
 # Snippetbox
 
-Snippetbox is a simple web application for sharing code snippets, built with Go.
+## Project Overview
+
+Snippetbox is a simple but robust application for sharing code snippets.
+It's built with Go and uses PostgreSQL for data storage.
+The application allows users to create, view, and manage their code snippets.
+
+## Features
+
+- User authentication: Sign up, log in, and log out.
+- Snippet management: Create, view, and delete snippets.
+- Secure: All data is transmitted over HTTPS.
+
+## Technologies Used
+
+- Go: The main programming language used.
+- Gorilla/mux: The HTTP router and URL matcher for building Go web servers.
+- PostgreSQL: The database used for storing data.
+- Docker: Used for creating and managing the application's environment.
+- Docker Compose: Used for defining and running multi-container Docker applications.
 
 ## Project Structure
 
@@ -60,7 +78,4 @@ The application will be available at <https://localhost:4000>.
 
 ### Demo
 
-https://github.com/denim-bluu/go-snippetbox-app/assets/66572804/f70ef134-f58a-49dc-a733-616714f99051
-
-
-
+<https://github.com/denim-bluu/go-snippetbox-app/assets/66572804/f70ef134-f58a-49dc-a733-616714f99051>
