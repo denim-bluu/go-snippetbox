@@ -20,8 +20,8 @@ import (
 
 type application struct {
 	logger        *slog.Logger
-	snippetModel  *models.SnippetModel
-	userModel     *models.UserModel
+	snippetModel  models.SnippetModelInterface
+	userModel     models.UserModelInterface
 	templateCache map[string]*template.Template
 	formDecoder   *schema.Decoder
 	cookieStore   *sessions.CookieStore

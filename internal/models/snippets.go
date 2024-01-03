@@ -6,6 +6,14 @@ import (
 	"time"
 )
 
+type SnippetModelInterface interface {
+	Insert(title string, content string, expires int) (int, error)
+	Get(id int) (Snippet, error)
+	Latest() ([]Snippet, error)
+	GetIDs() ([]int, error)
+	Delete(id int) (Snippet error)
+}
+
 type Snippet struct {
 	ID      int
 	Title   string
@@ -18,25 +26,21 @@ type SnippetModel struct {
 	DB *sql.DB
 }
 
-func (m *SnippetModel) Insert(title string, content string, expires int) (Snippet, error) {
+func (m *SnippetModel) Insert(title string, content string, expires int) (int, error) {
 	query := `INSERT INTO snippets (title, content, expires)
 	VALUES ($1, $2, CURRENT_TIMESTAMP + $3 * INTERVAL '1 day')
-	RETURNING id, title, content, created, expires`
+	RETURNING id`
 
 	result := m.DB.QueryRow(query, title, content, expires)
 
-	var snip Snippet
+	var id int
 	err := result.Scan(
-		&snip.ID,
-		&snip.Title,
-		&snip.Content,
-		&snip.Created,
-		&snip.Expires,
+		&id,
 	)
 	if err != nil {
-		return Snippet{}, err
+		return 0, err
 	}
-	return snip, nil
+	return id, nil
 }
 
 func (m *SnippetModel) Delete(id int) error {

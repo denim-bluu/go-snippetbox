@@ -61,6 +61,10 @@ func (app *application) requireAuthentication(next http.Handler) http.Handler {
 func (app *application) authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session, err := app.cookieStore.Get(r, "session")
+		if err != nil {
+			app.serverError(w, r, err)
+			return
+		}
 		id := session.Values["authenticatedUserID"]
 		if id == nil {
 			next.ServeHTTP(w, r)

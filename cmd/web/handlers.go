@@ -31,6 +31,10 @@ type userLoginForm struct {
 	validator.Validator `schema:"-"`
 }
 
+func (app *application) ping(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("OK"))
+}
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	snippets, err := app.snippetModel.Latest()
 	if err != nil {
@@ -115,7 +119,7 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	snippet, err := app.snippetModel.Insert(form.Title, form.Content, form.Expires)
+	id, err := app.snippetModel.Insert(form.Title, form.Content, form.Expires)
 	if err != nil {
 		app.serverError(w, r, err)
 		return
@@ -128,7 +132,7 @@ func (app *application) snippetCreatePost(w http.ResponseWriter, r *http.Request
 	}
 	session.AddFlash("Snippet successfully created!", "create-message")
 	session.Save(r, w)
-	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", snippet.ID), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/snippet/view/%d", id), http.StatusSeeOther)
 }
 
 func (app *application) snippetDelete(w http.ResponseWriter, r *http.Request) {
@@ -160,7 +164,7 @@ func (app *application) snippetDeletePost(w http.ResponseWriter, r *http.Request
 		app.serverError(w, r, err)
 		return
 	}
-	http.Redirect(w, r, fmt.Sprintf("/"), http.StatusSeeOther)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func (app *application) userSignup(w http.ResponseWriter, r *http.Request) {
@@ -204,6 +208,10 @@ func (app *application) userSignupPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session, err := app.cookieStore.Get(r, "session")
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
 	session.AddFlash("User signup complete!", "create-message")
 	session.Save(r, w)
 
