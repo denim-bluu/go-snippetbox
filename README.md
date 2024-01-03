@@ -60,4 +60,7 @@ The application will be available at <https://localhost:4000>.
 
 ### Demo
 
-[Demo Video](<demo/Screen Recording 2024-01-03 at 21.24.00.mov>)>)
+https://github.com/denim-bluu/go-snippetbox-app/assets/66572804/f70ef134-f58a-49dc-a733-616714f99051
+
+
+
