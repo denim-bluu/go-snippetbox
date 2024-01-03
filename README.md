@@ -57,3 +57,7 @@ The application will be available at <https://localhost:4000>.
 - Delete snippets
 - Sign up for an account
 - Sign in and out of your account
+
+### Demo
+
+[Demo Video](<demo/Screen Recording 2024-01-03 at 21.24.00.mov>)>)
